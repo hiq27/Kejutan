@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Happy 20th Birthday — Surprise</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg1:#fff0f6;
+    --bg2:#fff8fb;
+    --accent:#c2185b;
+    --accent-2:#ff4d6d;
+    --muted:#7c3b6e;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:"Poppins",system-ui,Segoe UI,Roboto,Arial;
+    background: linear-gradient(160deg,var(--bg1),var(--bg2));
+    color:var(--muted);
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:28px;
+  }
+  .card{
+    width:100%;
+    max-width:980px;
+    background: rgba(255,255,255,0.85);
+    border-radius:18px;
+    box-shadow:0 18px 40px rgba(0,0,0,0.12);
+    padding:28px;
+    overflow:hidden;
+    position:relative;
+  }
+
+  h1{color:#b11261; margin:0 0 6px; font-size:28px}
+  p.lead{margin:0 0 18px; opacity:0.9}
+
+  /* Surprise area */
+  .controls{display:flex; gap:12px; flex-wrap:wrap; margin-bottom:18px}
+  .btn{
+    background:linear-gradient(180deg,var(--accent),var(--accent-2));
+    color:white; border:none; padding:12px 18px; border-radius:999px;
+    font-weight:600; cursor:pointer; box-shadow:0 8px 18px rgba(194,31,101,0.18);
+  }
+  .btn.secondary{background:#6b21a8}
+
+  /* animation field */
+  #stage{height:260px; border-radius:12px; background: linear-gradient(180deg,#fff,#fff7fb);
+    border:1px dashed rgba(0,0,0,0.05); display:flex; align-items:center; justify-content:center;
+    overflow:hidden; position:relative; margin-bottom:18px;
+  }
+  #messageBox{ text-align:center; padding: 10px 22px; max-width:820px }
+
+  .floating{
+    position:absolute; font-size:22px; pointer-events:none; opacity:0.95;
+    transform:translateY(20px);
+    animation:floatUp 5s linear forwards;
+  }
+  @keyframes floatUp{
+    0%{ transform: translateY(20px) scale(0.9); opacity:0}
+    10%{ opacity:1 }
+    100%{ transform: translateY(-260px) scale(1.15); opacity:0}
+  }
+
+  /* camera panel */
+  .camera-panel{display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap}
+  .camera-box{flex:1; min-width:260px; max-width:420px; background:#fff; border-radius:12px; padding:12px; box-shadow:0 8px 18px rgba(0,0,0,0.06)}
+  video{width:100%; border-radius:10px; background:#000}
+  canvas{width:100%; border-radius:10px; display:block}
+  .preview{margin-top:8px; text-align:center}
+  .note{font-size:13px; color:#6b7280; margin-top:8px}
+
+  /* responsive */
+  @media (max-width:720px){
+    #stage{height:200px}
+    h1{font-size:22px}
+  }
+
+  /* confetti simple */
+  .confetti {
+    position: absolute; width:10px; height:10px; border-radius:50%;
+    animation:fall 4s linear forwards; opacity:0.9;
+  }
+  @keyframes fall { 0%{transform:translateY(-40vh) rotate(0)} 100%{transform:translateY(90vh) rotate(360deg); opacity:0} }
+
+  .success-card{
+    text-align:center; padding:20px; border-radius:12px;
+    background:linear-gradient(180deg,#fff,#fff6f9);
+    box-shadow:0 12px 30px rgba(194,31,101,0.08);
+  }
+  .muted{color:#7b5a74; font-size:14px}
+  a.link{color:var(--accent); text-decoration:none; font-weight:600}
+</style>
+</head>
+<body>
+
+<div class="card" role="main">
+
+  <div id="messageBox">
+    <h1>Selamat Ulang Tahun Ke-20, Malik Luther! 🎉</h1>
+    <p class="lead">Klik tombol kejutan, lalu ambil foto spesial yang lucuu untuk dikirim ke aku yaaaaaaa.</p>
+  </div>
+
+  <div class="controls" aria-hidden="false">
+    <button id="btnSurprise" class="btn">Buka Kejutan 💗</button>
+    <button id="btnShowCamera" class="btn secondary">Ambil Foto & Kirim ke Akuuu 📸</button>
+  </div>
+
+  <div id="stage" aria-live="polite">
+    <div id="stageContent" style="z-index:2; text-align:center;">
+      <div style="max-width:680px">
+        <h2 style="margin:0;color:#b11261">Tekan "Buka Kejutan" untuk ucapan manis</h2>
+        <p class="muted" style="margin-top:6px">Animasi love, bunga, dan pesan romantis akan muncul di sini.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CAMERA & SEND PANEL -->
+  <div id="cameraArea" style="margin-top:18px; display:none;">
+    <div class="camera-panel">
+      <div class="camera-box" style="flex:1">
+        <label style="font-weight:700; display:block; margin-bottom:8px">Live Camera (Izinkan kamera di browser)</label>
+        <video id="video" playsinline autoplay muted></video>
+        <div class="note" id="cameraNote">Klik <strong>Izinkan</strong> saat browser meminta akses kamera.</div>
+        <div style="margin-top:10px; display:flex; gap:8px;">
+          <button id="btnCapture" class="btn">Ambil Foto 📷</button>
+          <button id="btnStopCamera" class="btn secondary">Stop Kamera ✕</button>
+        </div>
+      </div>
+
+      <div class="camera-box" style="max-width:360px;">
+        <label style="font-weight:700; display:block; margin-bottom:8px">Preview Foto</label>
+        <canvas id="canvas" width="360" height="270" style="background:#fff; border-radius:10px;"></canvas>
+        <div class="preview" style="margin-top:10px">
+          <button id="btnDownload" class="btn" style="display:none">Unduh Foto ⬇️</button>
+          <button id="btnShare" class="btn secondary" style="display:none">Kirim ke WhatsApp 💌</button>
+        </div>
+        <p class="note" style="margin-top:8px">Jika tombol "Kirim ke WhatsApp" tidak bekerja otomatis, unduh foto lalu kirim secara manual melalui WhatsApp akuuu yaaa.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- success / message area -->
+  <div id="resultArea" style="margin-top:18px; display:none;">
+    <div class="success-card">
+      <h3 style="color:#b12a6c; margin:0">Ucapan Spesial Untukmu ❤️</h3>
+      <p class="muted" id="finalMsg" style="margin-top:8px">
+        Haii bro, udah kepala dua nihh. Panjang umur, sehat selalu, lancar rejekinya, makin ganteng, dan kurangi rokoknya. Terima kasih sudah hadir di hidup aku. I love u more than more seng! ♡
+      </p>
+      <div style="margin-top:12px">
+        <button id="btnSpamHearts" class="btn">Tampilkan Love & Bunga Lagi ✨</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ------------------------
+   Utilities & constants
+   ------------------------ */
+const btnSurprise = document.getElementById('btnSurprise');
+const stage = document.getElementById('stage');
+const stageContent = document.getElementById('stageContent');
+const btnShowCamera = document.getElementById('btnShowCamera');
+const cameraArea = document.getElementById('cameraArea');
+const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const btnCapture = document.getElementById('btnCapture');
+const btnStopCamera = document.getElementById('btnStopCamera');
+const btnDownload = document.getElementById('btnDownload');
+const btnShare = document.getElementById('btnShare');
+const resultArea = document.getElementById('resultArea');
+const btnSpamHearts = document.getElementById('btnSpamHearts');
+
+let stream = null;
+let latestBlob = null;
+const devPhone = '6281234567890'; // <-- Ganti nomor developer (format internasional tanpa +). Contoh: 62812...
+/* ------------------------
+   Surprise animation
+   ------------------------ */
+function spawnFloating(icon, leftPct, delayMs, size=28) {
+  const el = document.createElement('div');
+  el.className = 'floating';
+  el.innerText = icon;
+  el.style.left = (leftPct)+'px';
+  el.style.fontSize = size+'px';
+  el.style.animationDelay = (delayMs/1000)+'s';
+  stage.appendChild(el);
+  setTimeout(()=>el.remove(), 5200 + delayMs);
+}
+
+function startSurpriseFlow(){
+  // clear stage content
+  stageContent.style.opacity = '0';
+  setTimeout(()=> stageContent.style.display='none', 300);
+
+  // play short audio (optional) - generate simple tone using WebAudio (no external file)
+  try {
+    const ac = new (window.AudioContext||window.webkitAudioContext)();
+    const o = ac.createOscillator();
+    const g = ac.createGain();
+    o.type='sine'; o.frequency.value=440;
+    g.gain.value = 0.0001;
+    o.connect(g); g.connect(ac.destination);
+    o.start();
+    // ramp quickly
+    g.gain.exponentialRampToValueAtTime(0.08, ac.currentTime + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + 0.9);
+    setTimeout(()=>{ o.stop(); ac.close(); }, 950);
+  } catch(e){ /* ignore audio errors */ }
+
+  // spawn many floating icons with stagger
+  const icons = ['💗','🌸','💞','🌹','✨','💐','💕','🎀'];
+  for(let i=0;i<28;i++){
+    const icon = icons[Math.floor(Math.random()*icons.length)];
+    const left = Math.random()* (stage.clientWidth - 40);
+    const delay = i * 120;
+    const size = 18 + Math.floor(Math.random()*28);
+    setTimeout(()=> spawnFloating(icon, left, delay, size), delay);
+  }
+
+  // after animation show final message area
+  setTimeout(()=>{
+    resultArea.style.display = 'block';
+    resultArea.scrollIntoView({behavior:'smooth'});
+  }, 2200);
+}
+
+/* ------------------------
+   Camera & capture
+   ------------------------ */
+async function startCamera(){
+  try{
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio:false });
+    video.srcObject = stream;
+    video.play();
+    cameraArea.style.display = 'block';
+    // show canvas cleared
+    clearCanvas();
+  } catch(err){
+    alert('Gagal mengakses kamera. Pastikan izin diberikan dan perangkat mendukung kamera.');
+    console.error(err);
+  }
+}
+
+function stopCamera(){
+  if(stream){
+    stream.getTracks().forEach(t => t.stop());
+    stream = null;
+  }
+  video.pause();
+  video.srcObject = null;
+  cameraArea.style.display = 'none';
+}
+
+function clearCanvas(){
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0,0,canvas.width, canvas.height);
+  btnDownload.style.display = 'none';
+  btnShare.style.display = 'none';
+  latestBlob = null;
+}
+
+btnShowCamera.addEventListener('click', async ()=>{
+  // start camera when clicking show camera
+  await startCamera();
+  // scroll
+  cameraArea.scrollIntoView({behavior:'smooth'});
+});
+
+btnStopCamera.addEventListener('click', ()=>{
+  stopCamera();
+});
+
+btnCapture.addEventListener('click', ()=>{
+  if(!stream){
+    alert('Kamera belum aktif.');
+    return;
+  }
+  // draw current frame to canvas (fit video to canvas)
+  const vw = video.videoWidth;
+  const vh = video.videoHeight;
+  if(!vw || !vh){
+    alert('Tunggu sebentar sampai kamera siap...');
+    return;
+  }
+
+  // Calculate cover cropping to fill canvas nicely (center crop)
+  const cw = canvas.width;
+  const ch = canvas.height;
+  const videoRatio = vw / vh;
+  const canvasRatio = cw / ch;
+  let sx, sy, sw, sh;
+  if(videoRatio > canvasRatio){
+    // video wider -> crop left/right
+    sh = vh;
+    sw = vh * canvasRatio;
+    sx = (vw - sw) / 2;
+    sy = 0;
+  } else {
+    // video taller -> crop top/bottom
+    sw = vw;
+    sh = vw / canvasRatio;
+    sx = 0;
+    sy = (vh - sh) / 2;
+  }
+
+  ctx.drawImage(video, sx, sy, sw, sh, 0,0, cw, ch);
+
+  // optional: add romantic frame overlay (simple)
+  ctx.fillStyle = 'rgba(255,255,255,0.02)';
+  ctx.fillRect(0,0,cw,ch);
+
+  // decorate border
+  ctx.strokeStyle = 'rgba(194,31,101,0.12)';
+  ctx.lineWidth = 8;
+  ctx.strokeRect(8,8,cw-16,ch-16);
+
+  // add small text
+  ctx.fillStyle = '#b12a6c';
+  ctx.font = '18px Poppins, sans-serif';
+  ctx.fillText('Selamat Ulang Tahun Malik ❤', 18, ch - 18);
+
+  // get blob for sharing
+  canvas.toBlob((blob)=>{
+    latestBlob = blob;
+    btnDownload.style.display = 'inline-block';
+    btnShare.style.display = 'inline-block';
+  }, 'image/png', 0.92);
+});
+
+/* ------------------------
+   Download & Share behaviour
+   ------------------------ */
+
+btnDownload.addEventListener('click', ()=>{
+  if(!latestBlob){ alert('Ambil foto dulu.'); return; }
+  const url = URL.createObjectURL(latestBlob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'foto-ultah-malik.png';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+});
+
+btnShare.addEventListener('click', async ()=>{
+  if(!latestBlob){ alert('Ambil foto dulu.'); return; }
+
+  const file = new File([latestBlob], 'foto-ultah-malik.png', { type: 'image/png' });
+
+  // Try Web Share API with files (works on many mobile browsers)
+  if(navigator.canShare && navigator.canShare({ files: [file] })){
+    try{
+      await navigator.share({
+        files: [file],
+        title: 'Foto Ucapan Ulang Tahun Malik',
+        text: 'Halo developer, ini foto spesial dari user untuk dikirimkan 🎉'
+      });
+      // share returned - nothing else to do
+      return;
+    }catch(err){
+      console.warn('Share failed', err);
+      alert('Gagal membagikan lewat Share API. Akan buka chat WhatsApp untuk kirim manual.');
+    }
+  }
+
+  // Fallback: open wa.me with prefilled text and provide download instruction
+  // We cannot attach file automatically on all browsers. We'll provide a link to download and open wa.
+  const text = encodeURIComponent('Halo kak developer, saya sudah mengambil foto ucapan ulang tahun Malik. Saya akan mengirim fotonya via chat ini. Terima kasih!');
+  // open wa chat
+  window.open('https://wa.me/' + encodeURIComponent(devPhone) + '?text=' + text, '_blank');
+
+  alert('Jika WA tidak otomatis melampirkan foto, silakan tekan tombol "Unduh Foto" lalu kirim foto tersebut secara manual ke chat WhatsApp yang terbuka.');
+});
+
+/* ------------------------
+   Extra UI: show final message + hearts
+   ------------------------ */
+btnSurprise.addEventListener('click', ()=>{
+  startSurpriseFlow();
+  // after surprise show final message and include the message block
+  setTimeout(()=>{
+    resultArea.style.display = 'block';
+    resultArea.scrollIntoView({behavior:'smooth'});
+  }, 2300);
+});
+
+btnSpamHearts.addEventListener('click', ()=>{
+  // simply spawn more visuals
+  for(let i=0;i<30;i++){
+    const icons = ['💗','🌸','💞','🌹','✨','💐','💕','🎀'];
+    const icon = icons[Math.floor(Math.random()*icons.length)];
+    const left = Math.random()* (stage.clientWidth - 40);
+    const delay = i * 80;
+    const size = 20 + Math.floor(Math.random()*26);
+    setTimeout(()=> spawnFloating(icon, left, delay, size), delay);
+  }
+});
+
+/* Cleanup on unload */
+window.addEventListener('beforeunload', ()=> stopCamera());
+
+</script>
+
+</body>
+</html>
